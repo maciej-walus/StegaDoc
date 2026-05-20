@@ -5,11 +5,11 @@ PoC app steganography tool developed for the War Studies University in Warsaw (A
 
 ## Stack
 
-|Python 3.12 · Flask 3.x · Vanilla HTML/CSS/JS|
+Python 3.12 · Flask 3.x · Vanilla HTML/CSS/JS
 
 Plans, hopes and dreams:
-| Infrastructure | Terraform |
-| Containerisation | Docker · Azure Container Apps |
+Infrastructure | Terraform
+Containerization | Docker · Azure Container Apps
 
 ---
 
