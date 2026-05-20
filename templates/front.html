@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StegaDoc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:    #0e0e0e;
+      --paper:  #f4f0e8;
+      --accent: #1a3a2a;
+      --danger: #8b1a1a;
+      --mid:    #6b6660;
+      --border: #c8c0b0;
+      --mono:   'DM Mono', monospace;
+      --serif:  'Fraunces', Georgia, serif; }
+    html, body { 
+      min-height: 100vh; 
+      background: var(--paper); 
+      color: var(--ink); 
+      font-family: var(--mono); 
+      font-size: 14px; }
+    body::before {
+      content: ''; 
+      position: fixed; 
+      inset: 0; 
+      pointer-events: none; 
+      z-index: 0; }
+    .page { 
+      position: relative; 
+      z-index: 1; 
+      max-width: 780px; 
+      margin: 0 auto; 
+      padding: 48px 24px 80px; }
+    header { 
+      border-bottom: 2px solid var(--ink); 
+      padding-bottom: 20px;
+      margin-bottom: 44px; }
+    .logo  { font-family: var(--serif); 
+      font-size: 42px; 
+      font-weight: 700; 
+      letter-spacing: -1px; 
+      line-height: 1; }
+    .logo span { 
+      font-style: italic; 
+      font-weight: 300; 
+      color: var(--mid); }
+    .tagline { 
+      margin-top: 8px; 
+      font-size: 11px; 
+      letter-spacing: 0.15em; 
+      text-transform: uppercase; 
+      color: var(--mid); }
+    .tabs { 
+      display: flex; 
+      margin-bottom: 40px; 
+      border-bottom: 2px solid var(--ink); }
+    .tab  {
+      padding: 10px 28px; cursor: pointer; font-family: var(--mono);
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      border: 2px solid transparent; border-bottom: none; margin-bottom: -2px;
+      background: transparent; color: var(--mid); 
+      transition: color .15s, background .15s, border-color .15s;}
+    .tab:hover { 
+      color: var(--ink); }
+    .tab.active { 
+      background: var(--paper); 
+      border-color: var(--ink); color: var(--ink); font-weight: 500; }
+    .panel { 
+      display: none; } 
+    .panel.active { 
+      display: block; }
+    .field { 
+      margin-bottom: 24px; }
+    label  {
+      display: block; 
+      font-size: 10px; 
+      letter-spacing: 0.14em; 
+      text-transform: uppercase; 
+      color: var(--mid); 
+      margin-bottom: 6px; }
+    .dropzone {
+      border: 1.5px dashed var(--border); 
+      padding: 28px 20px; text-align: center;
+      cursor: pointer; 
+      transition: border-color .2s, background .2s; 
+      position: relative;
+    }
+    .dropzone:hover, 
+    .dropzone.drag-over { 
+      border-color: var(--accent); 
+      background: rgba(26,58,42,.04); }
+    .dropzone input[type=file] { 
+      position: absolute; 
+      inset: 0; 
+      opacity: 0; 
+      cursor: pointer; 
+      width: 100%; 
+      height: 100%; }
+    .dropzone .dz-icon { 
+      font-size: 28px; 
+      margin-bottom: 8px; 
+      opacity: .35; }
+    .dropzone .dz-text { 
+      font-size: 12px; 
+      color: var(--mid); }
+    .dropzone .dz-name { 
+      font-size: 12px; 
+      color: var(--accent); 
+      margin-top: 6px; 
+      display: none; 
+      font-weight: 500; }
+    .dropzone.has-file .dz-name { 
+      display: block; }
+    .dropzone.has-file .dz-text { 
+      display: none; }
+    .pw-wrap { 
+      position: relative; }
+    .pw-wrap input {
+      width: 100%; 
+      padding: 10px 40px 10px 12px; 
+      border: 1.5px solid var(--border);
+      background: transparent; 
+      font-family: var(--mono); 
+      font-size: 14px; 
+      color: var(--ink);
+      outline: none; 
+      transition: border-color .2s;}
+    .pw-wrap input:focus { 
+      border-color: var(--accent); }
+    .pw-toggle {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: var(--mid); display: flex; align-items: center; justify-content: center;
+      transition: color .15s;}
+    .pw-toggle:hover { 
+      color: var(--ink); }
+    .pw-toggle svg { 
+      display: block; 
+      width: 18px; 
+      height: 18px; 
+      fill: none; 
+      stroke: currentColor; 
+      stroke-width: 1.6; 
+      stroke-linecap: round; 
+      stroke-linejoin: round; }
+    .row { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 16px; }
+    .btn {
+      display: inline-flex; 
+      align-items: center; 
+      gap: 10px;
+      padding: 12px 32px; 
+      background: var(--accent); 
+      color: #e8f0eb;
+      border: none; 
+      cursor: pointer; 
+      font-family: var(--mono); 
+      font-size: 11px;
+      letter-spacing: 0.14em; 
+      text-transform: uppercase; 
+      transition: background .2s, transform .1s; 
+      font-weight: 500;}
+    .btn:hover { 
+      background: #0e2a1c; } 
+    .btn:active { 
+      transform: scale(.98); }
+    .btn:disabled { 
+      background: var(--border); 
+      cursor: not-allowed; }
+    .btn .spinner {
+      width: 14px; 
+      height: 14px; 
+      border: 2px solid rgba(232,240,235,.3);
+      border-top-color: #e8f0eb; 
+      border-radius: 50%;
+      animation: spin .7s linear infinite; 
+      display: none;}
+    .btn.loading .spinner { 
+      display: block; } 
+    .btn.loading .btn-label { 
+      opacity: .6; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status { 
+      margin-top: 20px; 
+      padding: 12px 16px; 
+      font-size: 13px; 
+      border-left: 3px solid transparent; 
+      display: none; }
+    .status.error   { 
+      border-color: var(--danger); 
+      background: rgba(139,26,26,.06); 
+      color: var(--danger); 
+      display: block; }
+    .status.success { 
+      border-color: var(--accent); 
+      background: rgba(26,58,42,.06);  
+      color: var(--accent); 
+      display: block; }
+    .status.info    { 
+      border-color: var(--mid);    
+      background: rgba(107,102,96,.06); 
+      color: var(--mid);   
+      display: block; }
+    .cap-bar { 
+      margin-top: 10px; }
+    .cap-label { 
+      font-size: 10px; 
+      color: var(--mid); 
+      letter-spacing: .1em; 
+      text-transform: uppercase; 
+      margin-bottom: 4px; }
+    .cap-track { 
+      height: 3px; 
+      background: var(--border); }
+    .cap-fill  { 
+      height: 100%; 
+      background: var(--accent); 
+      transition: width .3s; }
+    .cap-fill.warn { 
+      background: #b85c00; } 
+    .cap-fill.over { 
+      background: var(--danger); }
+    footer { 
+      display:flex;
+      border-top: 1px solid var(--border); 
+      margin-top: 64px; 
+      padding-top: 16px; 
+      font-size: 10px; 
+      color: var(--mid); 
+      letter-spacing: .1em; 
+      text-transform: uppercase; 
+      justify-content:center;
+      align-items:center;}
+    footer span { 
+      color: var(--accent); 
+      font-weight: 500; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="logo">Stega<span>Doc</span></div>
+  </header>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('embed',this)">&#9660; Embed PDF</button>
+    <button class="tab"        onclick="switchTab('extract',this)">&#9650; Extract PDF</button>
+  </div>
+  <div class="panel active" id="panel-embed">
+    <div class="field">
+      <label>PDF document to hide</label>
+      <div class="dropzone" id="dz-pdf">
+        <input type="file" id="file-pdf" accept=".pdf,application/pdf" />
+        <div class="dz-icon">&#11041;</div>
+        <div class="dz-text">Drop PDF here or click to browse</div>
+        <div class="dz-name" id="dz-pdf-name"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Carrier image</label>
+      <div class="dropzone" id="dz-carrier">
+        <input type="file" id="file-carrier" accept="image/*" />
+        <div class="dz-icon">&#11041;</div>
+        <div class="dz-text">Drop PNG / JPG / BMP here or click to browse</div>
+        <div class="dz-name" id="dz-carrier-name"></div>
+      </div>
+      <div class="cap-bar" id="cap-bar" style="display:none">
+        <div class="cap-label">Carrier capacity used: <span id="cap-pct">-</span></div>
+        <div class="cap-track"><div class="cap-fill" id="cap-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="embed-pw" autocomplete="new-password" placeholder="min. 8 characters" />
+          <button class="pw-toggle" type="button" onclick="togglePw('embed-pw',this)" aria-label="Toggle password visibility"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Confirm password</label>
+        <div class="pw-wrap">
+          <input type="password" id="embed-pw2" autocomplete="new-password" placeholder="repeat password" />
+          <button class="pw-toggle" type="button" onclick="togglePw('embed-pw2',this)" aria-label="Toggle password visibility"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <button class="btn" id="btn-embed" onclick="doEmbed()">
+      <div class="spinner"></div><span class="btn-label">Embed &amp; Download PNG</span>
+    </button>
+    <div class="status" id="status-embed"></div>
+  </div>
+  <div class="panel" id="panel-extract">
+    <div class="field">
+      <label>Stego image (PNG)</label>
+      <div class="dropzone" id="dz-stego">
+        <input type="file" id="file-stego" accept="image/png,.png" />
+        <div class="dz-icon">&#11041;</div>
+        <div class="dz-text">Drop stego PNG here or click to browse</div>
+        <div class="dz-name" id="dz-stego-name"></div>
+      </div>
+    </div>
+    <div class="field" style="max-width:320px">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="extract-pw" autocomplete="current-password" placeholder="password used during embed" />
+        <button class="pw-toggle" type="button" onclick="togglePw('extract-pw',this)" aria-label="Toggle password visibility"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <button class="btn" id="btn-extract" onclick="doExtract()">
+      <div class="spinner"></div><span class="btn-label">Extract &amp; Download PDF</span>
+    </button>
+    <div class="status" id="status-extract"></div>
+  </div>
+  <footer>StegaDoc &mdash; Proof of Concept for War Studies University in Warsaw &mdash; 2026</footer>
+</div>
+
+<script>
+
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+  }
+
+  function wireDz(inputId, dzId, nameId, cb) {
+    const inp = document.getElementById(inputId);
+    const dz  = document.getElementById(dzId);
+    const nm  = document.getElementById(nameId);
+    const show = f => { nm.textContent = '\u2713 ' + f.name; dz.classList.add('has-file'); if (cb) cb(f); };
+    inp.addEventListener('change', () => { if (inp.files[0]) show(inp.files[0]); });
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) { inp.files = e.dataTransfer.files; show(f); } });
+  }
+
+  function updateCapacity() {
+    const pdfF = document.getElementById('file-pdf').files[0];
+    const carF = document.getElementById('file-carrier').files[0];
+    if (!pdfF || !carF) return;
+    const bar = document.getElementById('cap-bar'); bar.style.display = 'block';
+    const img = new Image();
+    img.onload = () => {
+      const capBits = img.width * img.height * 3;
+      const pctN    = Math.min(Math.round(((pdfF.size + 80 + 4) * 8) / capBits * 100), 100);
+      document.getElementById('cap-pct').textContent = pctN + '%';
+      const fill = document.getElementById('cap-fill');
+      fill.style.width = pctN + '%';
+      fill.className = 'cap-fill' + (pctN > 90 ? ' over' : pctN > 70 ? ' warn' : '');
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(carF);
+  }
+  
+  wireDz('file-pdf',     'dz-pdf',     'dz-pdf-name',     updateCapacity);
+  wireDz('file-carrier', 'dz-carrier', 'dz-carrier-name', updateCapacity);
+  wireDz('file-stego',   'dz-stego',   'dz-stego-name',   null);
+  const _EYE_OPEN   = '<svg viewBox="0 0 24 24" aria-hidden="true" style="display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const _EYE_CLOSED = '<svg viewBox="0 0 24 24" aria-hidden="true" style="display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  function togglePw(id, btn) {
+    const el   = document.getElementById(id);
+    const show = el.type === 'password';
+    el.type    = show ? 'text' : 'password';
+    btn.innerHTML = show ? _EYE_CLOSED : _EYE_OPEN;
+  }
+  function setStatus(id, type, msg) { const el = document.getElementById(id); el.className = 'status ' + type; el.textContent = msg; }
+  function clearStatus(id) { const el = document.getElementById(id); el.className = 'status'; el.textContent = ''; }
+  function setLoading(id, v) { const b = document.getElementById(id); b.disabled = v; v ? b.classList.add('loading') : b.classList.remove('loading'); }
+  function triggerDownload(blob, name) { const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 5000); }
+
+  async function doEmbed() {
+
+    clearStatus('status-embed');
+
+    const pdf = document.getElementById('file-pdf').files[0];
+    const car = document.getElementById('file-carrier').files[0];
+    const pw  = document.getElementById('embed-pw').value;
+    const pw2 = document.getElementById('embed-pw2').value;
+
+    if (!pdf) 
+      return setStatus('status-embed','error','Please select a PDF file.');
+    if (!car) 
+      return setStatus('status-embed','error','Please select a carrier image.');
+    if (!pw || pw.length < 8) 
+      return setStatus('status-embed','error','Password must be at least 8 characters.');
+    if (pw !== pw2) 
+      return setStatus('status-embed','error','Passwords do not match.');
+
+    const fd = new FormData(); fd.append('pdf',pdf); fd.append('carrier',car); fd.append('password',pw); fd.append('pw_validation',pw2);
+
+    setLoading('btn-embed', true);
+    setStatus('status-embed','info','Encrypting and embedding - this may take a few seconds.');
+    try {
+      const res = await fetch('/embed', { method:'POST', body:fd });
+      if (!res.ok) { 
+        const j = await res.json().catch(() => ({error:'Server error ('+res.status+')'})); 
+        return setStatus('status-embed','error',j.error||'Unknown error'); 
+      }
+      triggerDownload(await res.blob(), pdf.name.replace(/\.pdf$/i,'') + '_stego.png');
+      setStatus('status-embed','success','PDF embedded successfully. Stego image downloading now.');
+    } catch(e) { setStatus('status-embed','error','Network error: '+e.message); }
+    finally { setLoading('btn-embed',false); document.getElementById('embed-pw').value=''; document.getElementById('embed-pw2').value=''; }
+  }
+
+  async function doExtract() {
+
+    clearStatus('status-extract');
+    const stego = document.getElementById('file-stego').files[0];
+    const pw    = document.getElementById('extract-pw').value;
+    if (!stego) 
+      return setStatus('status-extract','error','Please select a stego image.');
+    if (!pw)    
+      return setStatus('status-extract','error','Password is required.');
+
+    const fd = new FormData(); fd.append('stego',stego); fd.append('password',pw);
+    setLoading('btn-extract',true);
+    setStatus('status-extract','info','Extracting and decrypting\u2026');
+    try {
+      const res = await fetch('/extract', { method:'POST', body:fd });
+      if (!res.ok) { 
+        const j = await res.json().catch(() => ({error:'Server error ('+res.status+')'})); 
+        return setStatus('status-extract','error',j.error||'Unknown error'); }
+      triggerDownload(await res.blob(), stego.name.replace(/_stego\.png$/i,'').replace(/\.png$/i,'') + '_recovered.pdf');
+      setStatus('status-extract','success','PDF recovered and integrity verified. Downloading now.');
+    } catch(e) { setStatus('status-extract','error','Network error: '+e.message); }
+    finally { setLoading('btn-extract',false); document.getElementById('extract-pw').value=''; }
+  }
+  </script>
+</body>
+</html>
