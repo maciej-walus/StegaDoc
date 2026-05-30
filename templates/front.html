@@ -264,7 +264,7 @@
     <div class="field">
       <label>Carrier image</label>
       <div class="dropzone" id="dz-carrier">
-        <input type="file" id="file-carrier" accept="image/*" />
+        <input type="file" id="file-carrier" accept=".png,.jpg,.jpeg,.bmp,image/png,image/jpeg,image/bmp" />
         <div class="dz-icon">&#11041;</div>
         <div class="dz-text">Drop PNG / JPG / BMP here or click to browse</div>
         <div class="dz-name" id="dz-carrier-name"></div>
@@ -329,15 +329,32 @@
     document.getElementById('panel-' + name).classList.add('active');
   }
 
-  function wireDz(inputId, dzId, nameId, cb) {
+  function wireDz(inputId, dzId, nameId, allowedExts, cb) {
     const inp = document.getElementById(inputId);
     const dz  = document.getElementById(dzId);
     const nm  = document.getElementById(nameId);
-    const show = f => { nm.textContent = '\u2713 ' + f.name; dz.classList.add('has-file'); if (cb) cb(f); };
-    inp.addEventListener('change', () => { if (inp.files[0]) show(inp.files[0]); });
+    const getExt = name => name.split('.').pop().toLowerCase();
+    const reject = name => {
+      dz.classList.remove('has-file', 'drag-over');
+      nm.textContent = '';
+      inp.value = '';
+      const readable = allowedExts.map(e => '.' + e).join(', ');
+      const panelStatus = dz.closest('.panel').querySelector('.status');
+      if (panelStatus) {
+        panelStatus.className = 'status error';
+        panelStatus.textContent = '"' + name + '" rejected \u2014 allowed formats: ' + readable + '.';
+      }
+    };
+    const accept = f => { nm.textContent = '\u2713 ' + f.name; dz.classList.add('has-file'); if (cb) cb(f); };
+    const validate = f => { if (!allowedExts.includes(getExt(f.name))) { reject(f.name); return false; } return true; };
+    inp.addEventListener('change', () => { const f = inp.files[0]; if (f && validate(f)) accept(f); });
     dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
     dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) { inp.files = e.dataTransfer.files; show(f); } });
+    dz.addEventListener('drop', e => {
+      e.preventDefault(); dz.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f && validate(f)) { inp.files = e.dataTransfer.files; accept(f); }
+    });
   }
 
   function updateCapacity() {
@@ -358,9 +375,9 @@
     img.src = URL.createObjectURL(carF);
   }
   
-  wireDz('file-pdf',     'dz-pdf',     'dz-pdf-name',     updateCapacity);
-  wireDz('file-carrier', 'dz-carrier', 'dz-carrier-name', updateCapacity);
-  wireDz('file-stego',   'dz-stego',   'dz-stego-name',   null);
+  wireDz('file-pdf',     'dz-pdf',     'dz-pdf-name',     ['pdf'],                          updateCapacity);
+  wireDz('file-carrier', 'dz-carrier', 'dz-carrier-name', ['png','jpg','jpeg','bmp'],        updateCapacity);
+  wireDz('file-stego',   'dz-stego',   'dz-stego-name',   ['png'],                           null);
   const _EYE_OPEN   = '<svg viewBox="0 0 24 24" aria-hidden="true" style="display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const _EYE_CLOSED = '<svg viewBox="0 0 24 24" aria-hidden="true" style="display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
   function togglePw(id, btn) {
@@ -387,6 +404,14 @@
       return setStatus('status-embed','error','Please select a PDF file.');
     if (!car) 
       return setStatus('status-embed','error','Please select a carrier image.');
+
+    const pdfExt = pdf.name.split('.').pop().toLowerCase();
+    if (pdfExt !== 'pdf')
+      return setStatus('status-embed','error','PDF file must have a .pdf extension.');
+    const carExt = car.name.split('.').pop().toLowerCase();
+    if (!['png','jpg','jpeg','bmp'].includes(carExt))
+      return setStatus('status-embed','error','Carrier image must have a .png, .jpg, .jpeg, or .bmp extension.');
+
     if (!pw || pw.length < 8) 
       return setStatus('status-embed','error','Password must be at least 8 characters.');
     if (pw !== pw2) 
@@ -415,6 +440,11 @@
     const pw    = document.getElementById('extract-pw').value;
     if (!stego) 
       return setStatus('status-extract','error','Please select a stego image.');
+
+    const stegoExt = stego.name.split('.').pop().toLowerCase();
+    if (stegoExt !== 'png')
+      return setStatus('status-extract','error','Stego image must be a .png file.');
+
     if (!pw)    
       return setStatus('status-extract','error','Password is required.');
 

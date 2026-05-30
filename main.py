@@ -12,6 +12,11 @@ app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 _HEADER_BYTES = 4
 _HEADER_BITS  = _HEADER_BYTES * 8
 
+# Allowed extension types
+_ALLOWED_PDF     = {".pdf"}
+_ALLOWED_CARRIER = {".png", ".jpg", ".jpeg", ".bmp"}
+_ALLOWED_STEGO   = {".png"}
+
 def _embed_lsb(image_array: np.ndarray, payload: bytes) -> np.ndarray:
     length_header = len(payload).to_bytes(_HEADER_BYTES, "big")
     all_bytes     = length_header + payload
@@ -62,6 +67,12 @@ def _validate_password(pw: str, pw2: str | None = None) -> str | None:
         return "Passwords do not match."
     return None
 
+def _validate_extension(filename: str, allowed: set[str], label: str) -> str | None:
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in allowed:
+        readable = ", ".join(sorted(allowed))
+        return f"Invalid {label} file type '{ext or '(none)'}'. Allowed: {readable}."
+    return None
 
 def _error(message: str, status: int = 400):
     return jsonify({"error": message}), status
@@ -89,6 +100,13 @@ def embed():
         return _error("No PDF file provided.")
     if not carrier_file:
         return _error("No carrier image provided.")
+
+    ext_err = _validate_extension(pdf_file.filename, _ALLOWED_PDF, "PDF")
+    if ext_err:
+        return _error(ext_err)
+    ext_err = _validate_extension(carrier_file.filename, _ALLOWED_CARRIER, "carrier image")
+    if ext_err:
+        return _error(ext_err)
 
     pw_err = _validate_password(password, pw_validation)
     if pw_err:
@@ -131,6 +149,10 @@ def extract():
 
     if not stego_file:
         return _error("No stego image provided.")
+
+    ext_err = _validate_extension(stego_file.filename, _ALLOWED_STEGO, "stego image")
+    if ext_err:
+        return _error(ext_err)
 
     pw_err = _validate_password(password)
     if pw_err:
