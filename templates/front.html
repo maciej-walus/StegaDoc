@@ -322,6 +322,11 @@
 
 <script>
 
+  // Clear all inputs on site reload
+  window.addEventListener('load', () => {
+      document.querySelectorAll('input[type="file"]').forEach(inp => { inp.value = ''; });
+    });
+
   function switchTab(name, el) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
